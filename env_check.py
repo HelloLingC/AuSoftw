@@ -1,4 +1,5 @@
 import subprocess
+import torch
 
 def check_ffmpeg():
     """If ffmpeg is installed, return the version"""
@@ -13,3 +14,10 @@ def check_ffmpeg():
         print('ERROR: ffmpeg is not installed')
         return None
     return None
+
+def is_gpu_available():
+    """检查GPU是否可用"""
+    try:
+        return torch.cuda.is_available()
+    except Exception:
+        return False

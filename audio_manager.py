@@ -1,5 +1,8 @@
 import os
 from audio import Audio
+import audio_preprocessor
+from agent.llm_spilitter import SplitterLLM
+from agent.llm_translator import TranslatorLLM
 
 class AudioManager:
     def __init__(self):
@@ -21,3 +24,9 @@ class AudioManager:
             if file.endswith(self.accepted_file_types):
                 self.add_audio_file(Audio(os.path.join(directory, file)))
         return self.audio_files
+
+    def start_all(self):
+        for audio in self.audio_files:
+            audio_preprocessor.start_processing(audio)
+            SplitterLLM().split(audio)
+            TranslatorLLM().translate(audio)

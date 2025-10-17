@@ -46,7 +46,7 @@ class AuSoftware(App):
                 yield Input(placeholder="输入文件夹路径", id="directory_input")
                 with Horizontal():
                     yield Button("加载音频", variant="primary", id="load_button", flat=True)
-                    yield Button("刷新列表", variant="default", id="refresh_button", flat=True)
+                    yield Button("Start Processing", variant="default", id="start_processing_button", flat=True)
                 
             with Vertical():
                 yield Label("已加载的音频文件:")
@@ -69,9 +69,9 @@ class AuSoftware(App):
             else:
                 self.notify("请输入文件夹路径", severity="error")
         
-        elif event.button.id == "refresh_button":
-            self.update_audio_display()
-            self.notify("列表已刷新")
+        elif event.button.id == "start_processing_button":
+            
+            self.notify("Processing started")
     
     def update_audio_display(self):
         """更新音频列表显示"""

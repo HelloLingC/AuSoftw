@@ -1,5 +1,10 @@
 import os
 from mutagen import File as MutagenFile
+from dataclasses import dataclass
+
+@dataclass
+class AudioTask:
+   task_name: str
 
 class Audio:
     def __init__(self, file_path: str):
@@ -10,6 +15,7 @@ class Audio:
         self.file_created_time = os.path.getctime(file_path)
         self.file_modified_time = os.path.getmtime(file_path)
 
+        self.language = 'ja'
         metadata = self._get_audio_metadata()
         self.duration = metadata["duration"]
         self.bitrate = metadata["bitrate"] # kbps

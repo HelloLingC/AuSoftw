@@ -6,6 +6,16 @@ class AudioPreprocessor:
     def __init__(self):
         pass
 
+    def start_processing(self, audio: Audio):
+        """
+        Start processing the audio file
+        """
+        self.vocal_seperate(audio)
+        self.enhance_audio_volume(audio)
+        self.compress_audio(audio)
+        self.split_audio(audio)
+        return audio
+
     def vocal_seperate(self, audio: Audio):
         """
         Separate the vocal from the audio file
@@ -30,13 +40,13 @@ class AudioPreprocessor:
         Compress the audio file
         """
         subprocess.run([
-            'ffmpeg', '-y', '-i', audio.file_path, '-vn', '-b:a', '96k',
+            'ffmpeg', '-y', '-i', f'{audio.file_path}.enhanced', '-vn', '-b:a', '96k',
             '-ar', '16000', '-ac', '1', '-metadata', 'encoding=UTF-8',
-            '-f', 'mp3', '{audio.file_path}.compressed'
+            '-f', 'mp3', f'{audio.file_path}.compressed'
         ], check=True, stderr=subprocess.PIPE)
 
-    def silence_detect(audio_file, start:float, end:float)->list[float]:
-        cmd = ['ffmpeg', '-y', '-i', audio_file,
+    def _silence_detect(self, audio_file, start:float, end:float)->list[float]:
+        cmd = ['ffmpeg', '-y', '-i', f'{audio_file}.compressed',
             '-ss', str(start), '-to', str(end),
             '-af', 'silencedetect=n=-30dB:d=0.5',
             '-f', 'null', '-']
@@ -48,13 +58,13 @@ class AudioPreprocessor:
                 for line in output.split('\n')
                 if 'silence_end' in line]
 
-    def split_audio(audio_file: str, frag_len:int=30*60, window: int=60) -> list[tuple[float, float]]:
+    def split_audio(self, audio: Audio, frag_len:int=30*60, window: int=60) -> list[tuple[float, float]]:
         """
         Split audio into 30mins for whisper model
         The real split will happen when trascribe, whose output in SEGMENT_TEMP_PATH
         Return: segments - list of tuples (start_time, end_time)
         """
-        duration = get_audio_duration(audio_file)
+        duration = audio.duration
         segments = []
         pos = 0
         while pos < duration:
@@ -63,7 +73,7 @@ class AudioPreprocessor:
                 break
             win_start = pos + frag_len - window
             win_end = min(win_start + 2 * window, duration)
-            silences = silence_detect(audio_file, win_start, win_end)
+            silences = self._silence_detect(audio.file_path, win_start, win_end)
 
             if silences:
                 target_pos = frag_len - (win_start - pos)
@@ -75,5 +85,5 @@ class AudioPreprocessor:
             segments.append((pos, pos + frag_len))
             pos += frag_len
         # Audio has been split into {} segments
-        log_utils.info(f"音频已被切分为 {len(segments)} 个片段")
+        print(f"Audio has been split into {len(segments)} segments")
         return segments

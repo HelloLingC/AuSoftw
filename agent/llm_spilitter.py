@@ -1,9 +1,11 @@
 import concurrent.futures
 import math
-from utils.config_utils import *
-import log_utils
-import llm_wrapper
-import gpt_prompts
+from agent.llm_wrapper import LLM_WRAPPER
+from agent.spacy_split import prepare_spacy_model
+from audio import Audio
+
+# 常量定义
+SPLIT_LLM_PATH = "split_llm.txt"
 
 class SplitterLLM:
     def __init__(self, nlp):
@@ -11,8 +13,17 @@ class SplitterLLM:
         self.nlp = nlp
         self.handled_batch_num = 0
 
+    def start_split(self, audio: Audio):
+        with open(f'{audio.file_path}.transcription.txt', 'r', encoding='utf-8') as f:
+            self.sents = f.readlines()
+        # temporarily use only llm splitter
+        # for text in sents:
+        #     t = split_comma.split_sent_by_comma(text, prepare_spacy_model(lang))
+        nlp = prepare_spacy_model(audio.language)
+        self.split(self.sents, nlp)
+
     def send_request(self, req, part_num, unchanged_indexs):
-        resp = llm_wrapper(f"{req}", gpt_prompts.get_split_prompt(10))
+        resp = LLM_WRAPPER.generate_text(f"{req}", LLM_WRAPPER.get_split_prompt(10))
         # LLM request failed
         if resp == None:
             print('Something wrong when asking gpt')
@@ -46,7 +57,7 @@ class SplitterLLM:
                     pending_req.append(sent)
                     if len(pending_req) >= batch_size:
                         self.handled_batch_num += 1
-                        log_utils.info(f'{self.handled_batch_num} Batch: Splitting {len(pending_req)} sentences...')
+                        print(f'{self.handled_batch_num} Batch: Splitting {len(pending_req)} sentences...')
                         future = executor.submit(self.send_request, pending_req, part_num, unchanged_indexs)
                         futures.append(future)
                         pending_req = []
@@ -57,7 +68,7 @@ class SplitterLLM:
 
             # Handle the remaining sentences
             if pending_req:
-                future = executor.submit(self.send_request, pending_req)
+                future = executor.submit(self.send_request, pending_req, part_num, unchanged_indexs)
                 futures.append(future)
             split_results = []
             for future in futures:
