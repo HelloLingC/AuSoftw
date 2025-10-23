@@ -4,7 +4,6 @@ import spacy.cli.download
 import env_check
 import spacy
 import os
-from agent.llm_spilitter import SplitterLLM
 
 # 常量定义
 TRANSCRIPTION_SENT_PATH = "transcription_sent.txt"

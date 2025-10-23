@@ -4,17 +4,17 @@ LLM_API_BASE = "https://api.openai.com/v1"
 LLM_API_KEY = "sk-proj-1234567890"
 LLM_MODEL = "gpt-4o-mini"
 
-LLM_WRAPPER = LLMWrapper()
-
 class LLMWrapper:
     def __init__(self):
         self.client= OpenAI(base_url=LLM_API_BASE, api_key=LLM_API_KEY, max_retries=3)
 
-    def generate_text(self, prompt, system_prompt):
+    def generate_text(self, prompt, system_prompt, conversation_history: list=None):
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
         ]
+        if conversation_history is not None:
+           messages = conversation_history.extend(messages)
 
         try:
             response = self.client.chat.completions.create(
@@ -25,6 +25,8 @@ class LLMWrapper:
         except Exception as e:
             print(f"Error while asking GPT: {e}")
             return None
+
+LLM_WRAPPER = LLMWrapper()
 
 def get_split_prompt(word_limit=12):
     """

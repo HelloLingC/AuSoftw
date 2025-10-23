@@ -2,3 +2,5 @@ textual
 textual-dev
 mutagen
 openai
+pandas
+spacy

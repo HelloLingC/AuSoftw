@@ -1,5 +1,5 @@
 import concurrent.futures
-import gpt_openai
+import llm_wrapper
 import gpt_prompts
 import json
 import json_repair
@@ -51,7 +51,7 @@ def translate(pending_reqs: list) -> str:
     chunk = '\n'.join(pending_reqs)
     conversation_history.append({'role': 'user', 'content': chunk})
     # res = gpt_openai.ask_gpt(chunk, system_prompt=gpt_prompts.get_translation_prompt(), conversation_history=conversation_history)
-    res = gpt_openai.ask_gpt(chunk, system_prompt=gpt_prompts.get_simple_translation_prompt(), conversation_history=conversation_history)
+    res = llm_wrapper.LLM_WRAPPER.generate_text(chunk, system_prompt=gpt_prompts.get_simple_translation_prompt(), conversation_history=conversation_history)
     if res is not None:
         # res is json object str. when next time asking gpt
         # provied with conversation, it will be wrong to parse
